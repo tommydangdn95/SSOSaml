@@ -1,0 +1,17 @@
+<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                   xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                   ID="_0bc923c1919a4e983b31fd70b0ef5d3f095818b765"
+                   Version="2.0"
+                   IssueInstant="2018-10-15T02:36:32+00:00"
+                   Destination="https://192.168.1.116:9443/samlsso"
+                   AssertionConsumerServiceURL="http://localhost:9009/Home/About"
+                   ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+                   >
+  <saml:Issuer>ssotesting</saml:Issuer>
+  <samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
+                      AllowCreate="true"
+                       />
+  <samlp:RequestedAuthnContext>
+    <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml:AuthnContextClassRef>
+  </samlp:RequestedAuthnContext>
+</samlp:AuthnRequest>
