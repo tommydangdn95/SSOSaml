@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Text;
@@ -15,64 +17,100 @@ namespace SAMLWebMVC.Controllers
     {
         public ActionResult Index()
         {
-            XmlDocument doc = new XmlDocument();
             var xmlPath = @"E:\Sample\SAMLWebMVC\SAMLWebMVC\test.xml";
-            doc.Load(xmlPath);
+            var xmlContent = GetXmlContent(xmlPath);
 
-            string pfxPath = @"E:\Sample\SAMLWebMVC\SAMLWebMVC\wso2carbon.pfx";
-            X509Certificate2 cert = new X509Certificate2(System.IO.File.ReadAllBytes(pfxPath), "wso2carbon");
-            SignXmlDocumentWithCertificate(doc, cert);
-            string readXml = doc.OuterXml;
-            System.IO.File.WriteAllText(@"E:\Sample\SAMLWebMVC\SAMLWebMVC\signed.xml", doc.OuterXml);
+            // convert xml to array to convert base 64 SAmlRequest
+            byte[] dataRequest = CompressArray(xmlContent);
+            // base64
+            string samlRequestBase64 = Convert.ToBase64String(dataRequest);
 
-            // convert xml to array to convert base 64
-            byte[] data = CompressArray(doc);
+            // encode URl
+            string samlRequestEncode = Server.UrlEncode(samlRequestBase64);
 
-            // convert to base64
-            string enCodeBase64 = Convert.ToBase64String(data);
+            // encode RelayStat
+            string relayStatEncode = Server.UrlEncode("http://localhost:2825/Home/About");
 
+            // encode sigAlEncode
+            string sigAlgEncode = Server.UrlEncode("http://www.w3.org/2000/09/xmldsig#rsa-sha1");
 
+            // chuoi can ky
+            string urlToBeSign = "SAMLRequest=" + samlRequestEncode + "&RelayState=" + relayStatEncode + "&SigAlg=" + sigAlgEncode;
+
+            // sign string
+            var signString = Sign(urlToBeSign);
+
+            string samlAuthRequest = "https://192.168.1.116:9443/samlsso?" + urlToBeSign + "&Signature=" + Server.UrlEncode(signString);
+
+            ViewBag.SamlAuthRequest = samlAuthRequest;
             return View();
         }
 
-        public byte[] CompressArray(XmlDocument doc)
+        public byte[] CompressArray(string xmlContent)
         {
-            MemoryStream ms = new MemoryStream();
-            doc.Save(ms);
-            byte[] bytes = ms.ToArray();
-            return bytes;
+            using (MemoryStream inMemStream = new MemoryStream(Encoding.ASCII.GetBytes(xmlContent)), outMemStream = new MemoryStream())
+            {
+                // create a compression stream with the output stream
+                using (var zipStream = new DeflateStream(outMemStream, CompressionMode.Compress, true))
+                    // copy the source string into the compression stream
+                    inMemStream.WriteTo(zipStream);
+
+                // return the compressed bytes in the output stream
+                return outMemStream.ToArray();
+            }
         }
 
-        public ActionResult About()
+        public ActionResult About(string response="")
         {
             ViewBag.Message = "Your application description page.";
 
             return View();
         }
 
-        public void SignXmlDocumentWithCertificate(XmlDocument doc, X509Certificate2 cert)
+        public string SignXmlDocumentWithCertificate(string strToBeSign, X509Certificate2 cert)
         {
-            SignedXml signedXml = new SignedXml(doc);
-            signedXml.SigningKey = cert.PrivateKey;
-            Reference reference = new Reference();
-            reference.Uri = "";
-            reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
-            signedXml.AddReference(reference);
+            var privateKey = cert.PrivateKey as RSACryptoServiceProvider;
 
-            KeyInfo keyinfo = new KeyInfo();
-            keyinfo.AddClause(new KeyInfoX509Data(cert));
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(strToBeSign);
+            writer.Flush();
+            stream.Position = 0;
 
-            signedXml.KeyInfo = keyinfo;
-            signedXml.ComputeSignature();
-            XmlElement xmlSlg = signedXml.GetXml();
+            var signature = privateKey.SignData(stream, "SHA1");
 
-            doc.DocumentElement.AppendChild(doc.ImportNode(xmlSlg, true));
+            return Convert.ToBase64String(signature);
         }
 
         public string GetXmlContent(string xmlPath)
         {
             var xmlContent = System.IO.File.ReadAllText(xmlPath);
             return xmlContent;
+        }
+
+
+        public string Sign(string strToBeSign)
+        {
+            var path = @"E:\Sample\SAMLWebMVC\SAMLWebMVC\wso2carbon.pfx";
+            var password = "wso2carbon";
+
+            var collection = new X509Certificate2Collection();
+
+            collection.Import(path, password, X509KeyStorageFlags.PersistKeySet);
+
+            var certificate = collection[0];
+
+            var privateKey = certificate.PrivateKey as RSACryptoServiceProvider;
+
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(strToBeSign);
+            writer.Flush();
+            stream.Position = 0;
+
+            var signature = privateKey.SignData(stream, "SHA1");
+
+            return Convert.ToBase64String(signature);
         }
 
         public ActionResult Contact()
