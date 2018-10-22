@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Tokens.Saml2;
 using Newtonsoft.Json;
+using Saml;
 using Sustainsys.Saml2.Saml2P;
 using System;
 using System.IO;
@@ -61,34 +62,35 @@ namespace SAMLWebMVC.Controllers
             }
         }
 
-        public ActionResult About(string SAMLResponse)
+        public ActionResult About()
         {
-            //string samlCertificate = @"-----BEGIN CERTIFICATE-----MIIDSTCCAjGgAwIBAgIEAoLQ/TANBgkqhkiG9w0BAQsFADBVMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxDTALBgNVBAoTBFdTTzIxEjAQBgNVBAMTCWxvY2FsaG9zdDAeFw0xNzA3MTkwNjUyNTFaFw0yNzA3MTcwNjUyNTFaMFUxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzENMAsGA1UEChMEV1NPMjESMBAGA1UEAxMJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAluZFdW1ynitztkWLC6xKegbRWxky+5P0p4ShYEOkHs30QI2VCuR6Qo4Bz5rTgLBrky03W1GAVrZxuvKRGj9V9+PmjdGtau4CTXu9pLLcqnruaczoSdvBYA3lS9a7zgFU0+s6kMl2EhB+rk7gXluEep7lIOenzfl2f6IoTKa2fVgVd3YKiSGsyL4tztS70vmmX121qm0sTJdKWP4HxXyqK9neolXI9fYyHOYILVNZ69z/73OOVhkh/mvTmWZLM7GM6sApmyLX6OXUp8z0pkY+vT/9+zRxxQs7GurC4/C1nK3rI/0ySUgGEafO1atNjYmlFN+M3tZX6nEcA6g94IavyQIDAQABoyEwHzAdBgNVHQ4EFgQUtS8kIYxQ8UVvVrZSdgyide9OHxUwDQYJKoZIhvcNAQELBQADggEBABfk5mqsVUrpFCYTZZhOxTRRpGXqoW1G05bOxHxs42Paxw8rAJ06Pty9jqM1CgRPpqvZa2lPQBQqZrHkdDE06q4NG0DqMH8NT+tNkXBe9YTre3EJCSfsvswtLVDZ7GDvTHKojJjQvdVCzRj6XH5Truwefb4BJz9APtnlyJIvjHk1hdozqyOniVZd0QOxLAbcdt946chNdQvCm6aUOputp8Xogr0KBnEy3U8es2cAfNZaEkPU8Va5bU6Xjny8zGQnXCXxPKp7sMpgO93nPBt/liX1qfyXM7xEotWoxmm6HZx8oWQ8U5aiXjZ5RKDWCCq4ZuXl6wVsUz1iE61suO5yWi8=-----END CERTIFICATE-----";
-            //Response samlResponse = new Response(samlCertificate);
-            //samlResponse.LoadXmlFromBase64(Request.Form["SAMLResponse"]);
+            //specify the certificate that your SAML provider has given to you
+            string samlCertificate = @"-----BEGIN CERTIFICATE-----MIIDSTCCAjGgAwIBAgIEAoLQ/TANBgkqhkiG9w0BAQsFADBVMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxDTALBgNVBAoTBFdTTzIxEjAQBgNVBAMTCWxvY2FsaG9zdDAeFw0xNzA3MTkwNjUyNTFaFw0yNzA3MTcwNjUyNTFaMFUxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzENMAsGA1UEChMEV1NPMjESMBAGA1UEAxMJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAluZFdW1ynitztkWLC6xKegbRWxky+5P0p4ShYEOkHs30QI2VCuR6Qo4Bz5rTgLBrky03W1GAVrZxuvKRGj9V9+PmjdGtau4CTXu9pLLcqnruaczoSdvBYA3lS9a7zgFU0+s6kMl2EhB+rk7gXluEep7lIOenzfl2f6IoTKa2fVgVd3YKiSGsyL4tztS70vmmX121qm0sTJdKWP4HxXyqK9neolXI9fYyHOYILVNZ69z/73OOVhkh/mvTmWZLM7GM6sApmyLX6OXUp8z0pkY+vT/9+zRxxQs7GurC4/C1nK3rI/0ySUgGEafO1atNjYmlFN+M3tZX6nEcA6g94IavyQIDAQABoyEwHzAdBgNVHQ4EFgQUtS8kIYxQ8UVvVrZSdgyide9OHxUwDQYJKoZIhvcNAQELBQADggEBABfk5mqsVUrpFCYTZZhOxTRRpGXqoW1G05bOxHxs42Paxw8rAJ06Pty9jqM1CgRPpqvZa2lPQBQqZrHkdDE06q4NG0DqMH8NT+tNkXBe9YTre3EJCSfsvswtLVDZ7GDvTHKojJjQvdVCzRj6XH5Truwefb4BJz9APtnlyJIvjHk1hdozqyOniVZd0QOxLAbcdt946chNdQvCm6aUOputp8Xogr0KBnEy3U8es2cAfNZaEkPU8Va5bU6Xjny8zGQnXCXxPKp7sMpgO93nPBt/liX1qfyXM7xEotWoxmm6HZx8oWQ8U5aiXjZ5RKDWCCq4ZuXl6wVsUz1iE61suO5yWi8=-----END CERTIFICATE-----";
 
+            Response samlResponse = new Response(samlCertificate);
+            samlResponse.LoadXmlFromBase64(Request.Form["SAMLResponse"]); //SAML providers usually POST the data into this var
 
-            string rawSamlData = Request["SAMLResponse"];
-
-            // the sample data sent us may be already encoded, 
-            // which results in double encoding
-            if (rawSamlData.Contains('%'))
+            if (samlResponse.IsValid())
             {
-                rawSamlData = HttpUtility.UrlDecode(rawSamlData);
+                string username, email, firstname, lastname;
+                try
+                {
+                    username = samlResponse.GetNameID();
+                    email = samlResponse.GetEmail();
+                    firstname = samlResponse.GetFirstName();
+                    lastname = samlResponse.GetLastName();
+                }
+
+                catch (Exception ex)
+                {
+                    //insert error handling code
+                    //no, really, please do
+                    return null;
+                }
+
+                //user has been authenticated, put your code here, like set a cookie or something...
+                //or call FormsAuthentication.SetAuthCookie() or something
             }
-
-            // read the base64 encoded bytes
-            byte[] samlData = Convert.FromBase64String(rawSamlData);
-
-            // read back into a UTF string
-            string samlAssertion = Encoding.UTF8.GetString(samlData);
-            XmlDocument doc = new XmlDocument();
-            doc.LoadXml(samlAssertion);
-            string json = JsonConvert.SerializeXmlNode(doc);
-            Saml2Id idsamlpe = new Saml2Id("iicipgbjllfjifdjjglpmancpfijenlmpfkbjdeb");
-            var readSamlp = Saml2Response.Read(samlAssertion, idsamlpe);
-
-            ViewBag.JsonExtract = json;
             return View();
         }
 
